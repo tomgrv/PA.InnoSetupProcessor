@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -14,72 +15,74 @@ namespace PA.InnoSetupProcessor
         public string Tasks { get; set; }
         public string Components { get; set; }
         public string DestDir { get; set; }
+        public string Flags { get; set; }
+        public string Attribs { get; set; }
+        public string Permissions { get; set; }
+
+        internal static KeyValuePair<Environment.SpecialFolder, string>[] FolderMap = { 
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.Windows, "win"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.SystemX86, "sys"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.System,"syswow64"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.ProgramFiles,"pf"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.ProgramFilesX86,"pf32"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.CommonProgramFiles,"cf"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.CommonProgramFilesX86,"cf32"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.Fonts,"fonts"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.StartMenu,"group"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.LocalApplicationData,"localappdata"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.CommonApplicationData,"commonappdata"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.SendTo,"sendto"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.CommonDesktopDirectory,"commondesktop"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.DesktopDirectory,"userdesktop"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.CommonDocuments,"commondocs"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.MyDocuments,"userdocs"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.Favorites,"commonfavorites"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.Programs,"userprograms"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.CommonPrograms,"commonprograms"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.StartMenu,"userstartmenu"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.CommonStartMenu,"commonstartmenu"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.Startup,"userstartup"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.CommonStartup,"commonstartup"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.Templates,"usertemplates"),
+                new KeyValuePair<Environment.SpecialFolder, string>(Environment.SpecialFolder.CommonTemplates,"commontemplates")
+        };
 
         private void PreparePath(ref string path, string variable, string name)
         {
-            if (path.StartsWith(variable ))
+            if (path.StartsWith(variable))
             {
                 path = "{" + name + "}" + path.Remove(0, variable.Length);
             }
         }
 
-        private string GetPath(string title)
+        private string FormatPath(string path)
         {
-            string path = GetProperty(title);
+            if (Path.IsPathRooted(path))
+            {
+                path = Path.GetFullPath(path);
 
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.Windows), "win");
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.SystemX86), "sys");
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.System), "syswow64");
+                foreach (var kvp in FolderMap)
+                {
+                    this.PreparePath(ref path, Environment.GetFolderPath(kvp.Key), kvp.Value);
+                }
 
+                this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.Windows).Substring(0, 2), "sd");
+            }
 
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "pf");
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "pf32");
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles), "cf");
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFilesX86), "cf32");
-            
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.Fonts), "fonts");
-            
-            
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), "group");
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "localappdata");
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "commonappdata");
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.SendTo), "sendto");
-
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.CommonDesktopDirectory), "commondesktop");
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "userdesktop");
-
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), "commondocs");
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "userdocs");
-
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.Favorites), "commonfavorites");
-
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.Programs), "userprograms");
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.CommonPrograms), "commonprograms");
-
-
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), "userstartmenu");
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu), "commonstartmenu");
-
-
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.Startup), "userstartup");
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.CommonStartup), "commonstartup");
-
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.Templates), "usertemplates");
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.CommonTemplates), "commontemplates");
-
-            this.PreparePath(ref path, Environment.GetFolderPath(Environment.SpecialFolder.Windows).Substring(0, 2), "sd");
-
-            return title + ": \"" + path + "\"";
+            return path;
         }
 
-        private string GetString(string title)
+        private string GetString(string title, bool FormatPath)
         {
-            return title + ": \"" + GetProperty(title) + "\"";
+            string data = GetProperty(title);
+            return data.Length > 0 ? title + ": \"" + (FormatPath ? this.FormatPath(data) : data) + "\";" : string.Empty;
+
         }
 
         private string GetFlag(string title)
         {
-            return title + ": " + GetProperty(title);
+            string data = GetProperty(title);
+            return data.Length > 0 ? title + ": " + data + ";" : string.Empty;
         }
 
         private string GetProperty(string title)
@@ -94,42 +97,34 @@ namespace PA.InnoSetupProcessor
             return string.Empty;
         }
 
-        private void SetProperty(XmlAttributeCollection c, string title)
+        private void SetProperty(string title, string value)
         {
-            if (c[title] is XmlAttribute)
-            {
-                var p = this.GetType().GetProperty(title);
+            var p = this.GetType().GetProperty(title);
 
-                if (p is PropertyInfo)
-                {
-                    p.SetValue(this, c[title].Value);
-                }
-            }
-            else if (c[title.ToLower()] is XmlAttribute)
+            if (p is PropertyInfo)
             {
-                var p = this.GetType().GetProperty(title);
+                p.SetValue(this, value);
 
-                if (p is PropertyInfo)
-                {
-                    p.SetValue(this, c[title.ToLower()].Value);
-                }
             }
         }
 
-        public InnoSetupFileItem(XmlAttributeCollection c)
+        public InnoSetupFileItem(string source, string dest, string component, string task)
         {
-            this.SetProperty(c, "Source");
-            this.SetProperty(c, "DestDir");
-            this.SetProperty(c, "Components");
-            this.SetProperty(c, "Tasks");
+            this.SetProperty("Source", source);
+            this.SetProperty("DestDir", dest);
+            this.SetProperty("Components", component);
+            this.SetProperty("Tasks", task);
         }
 
         public override string ToString()
         {
-            return this.GetString("Source") + ";" +
-                this.GetPath("DestDir") + ";" +
-                this.GetString("Components") + ";" +
-                this.GetString("Tasks");
+            return this.GetString("Source", false) +
+                this.GetString("DestDir", true) +
+                this.GetFlag("Components") +
+                this.GetFlag("Tasks") +
+                this.GetFlag("Flags") +
+                this.GetFlag("Attribs") +
+                this.GetFlag("Permissions");
         }
     }
 }

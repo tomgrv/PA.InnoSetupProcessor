@@ -19,8 +19,15 @@ namespace NuGet.Common
 
         public List<ProjectInSolution> Projects { get; private set; }
 
+        public string DirectoryName { get; private set; }
+        public string SolutionName { get; private set; }
+
         public Solution(string solutionFileName)
         {
+
+            this.DirectoryName = Path.GetDirectoryName(solutionFileName);
+            this.SolutionName = Path.GetFileNameWithoutExtension(solutionFileName);
+
             var solutionParser = solutionParserType.GetConstructor(
                 BindingFlags.Instance | BindingFlags.NonPublic,
                 binder: null, types: Type.EmptyTypes, modifiers: null).Invoke(null);

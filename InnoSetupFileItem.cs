@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using PA.File.Extensions;
 
 namespace PA.InnoSetupProcessor
 {
@@ -72,10 +73,10 @@ namespace PA.InnoSetupProcessor
             return path;
         }
 
-        private string GetString(string title, bool FormatPath)
+        private string GetString(string title, bool doFormatPath)
         {
             string data = GetProperty(title);
-            return data.Length > 0 ? title + ": \"" + (FormatPath ? this.FormatPath(data) : data) + "\";" : string.Empty;
+            return data.Length > 0 ? title + ": \"" + (doFormatPath ? this.FormatPath(data) : data) + "\";" : string.Empty;
 
         }
 
@@ -89,7 +90,7 @@ namespace PA.InnoSetupProcessor
         {
             var p = this.GetType().GetProperty(title, typeof(String));
 
-            if (p is PropertyInfo)
+            if (p != null)
             {
                 return (p.GetValue(this) ?? string.Empty).ToString();
             }
@@ -101,7 +102,7 @@ namespace PA.InnoSetupProcessor
         {
             var p = this.GetType().GetProperty(title);
 
-            if (p is PropertyInfo)
+            if (p != null)
             {
                 p.SetValue(this, value);
 
@@ -120,11 +121,85 @@ namespace PA.InnoSetupProcessor
         {
             return this.GetString("Source", false) +
                 this.GetString("DestDir", true) +
-                this.GetFlag("Components") +
+                this.GetFlag("Components").Replace('.','-') +
                 this.GetFlag("Tasks") +
                 this.GetFlag("Flags") +
                 this.GetFlag("Attribs") +
                 this.GetFlag("Permissions");
+        }
+
+        internal static IEnumerable<InnoSetupFileItem> OptimizeFileItems( IEnumerable<InnoSetupFileItem> items)
+        {
+            InnoSetupFileItem[] files = items.Distinct().ToArray();
+
+            for (int i = 0; i < files.Length; i++)
+            {
+                if (files[i] != null)
+                {
+                    for (int j = i + 1; j < files.Length; j++)
+                    {
+                        if (files[j] != null)
+                        {
+                            if (Path.GetFullPath(files[i].Source) == Path.GetFullPath(files[j].Source) && Path.GetFullPath(files[i].DestDir) == Path.GetFullPath(files[j].DestDir))
+                            {
+                                files[i].Tasks = MergeConditions(files[i].Tasks, files[j].Tasks);
+                                files[i].Components = MergeConditions(files[i].Components, files[j].Components);
+                                files[j] = null;
+                            }
+                                
+//                            if (System.IO.File.OpenRead(files[i].Source).GetSignature() == System.IO.File.OpenRead(files[j].Source).GetSignature())
+//                            {
+//                                files[i].Tasks = MergeConditions(files[i].Tasks, files[j].Tasks);
+//                                files[i].Components = MergeConditions(files[i].Components, files[j].Components);
+//                                files[j] = null;
+//                            }
+                        }
+                    }
+                }
+            }
+
+            return files.Where(s => s != null).OrderBy(s => s.Source);
+        }
+
+        internal static string MergeConditions(string cA, string cB)
+        {
+            if (!string.IsNullOrEmpty(cA) && !string.IsNullOrEmpty(cB) )
+            {
+                var a = cA.Split(new string[] { " or " }, StringSplitOptions.RemoveEmptyEntries);
+                var b = cB.Split(new string[] { " or " }, StringSplitOptions.RemoveEmptyEntries);
+                return a.Union(b).OrderBy(t => t).Aggregate((c1, c2) => c1 + " or " + c2);
+            }
+            else if(string.IsNullOrEmpty(cA) && !string.IsNullOrEmpty(cB))
+            {
+                return cB;
+            }
+
+            return cA ?? string.Empty;
+        }
+
+        internal static string MergeDependencies(string dA, string dB)
+        {
+            if (!string.IsNullOrEmpty(dA) && !string.IsNullOrEmpty(dB))
+            {
+                var a = dA.TrimEnd('/', '\\', '.');
+                var b = dB.TrimEnd('/', '\\', '.');
+
+                if (b.StartsWith(a))
+                {
+                    return a;
+                }
+
+                if (a.StartsWith(b))
+                {
+                    return b;
+                }
+            }
+            else if (string.IsNullOrEmpty(dA) && !string.IsNullOrEmpty(dB))
+            {
+                return dB;
+            }
+
+            return dA ?? string.Empty;
         }
     }
 }

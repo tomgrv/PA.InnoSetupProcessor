@@ -27,15 +27,20 @@ namespace PA.InnoSetupProcessor
         {
             var iss = this.parser.ReadFile(this.ScriptName);
 
-            this.UpdateDefine(iss.Global, "AppName", GetAttribute<AssemblyTitleAttribute>(t => t.Title));
+            var appname = GetAttribute<AssemblyTitleAttribute>(t => t.Title);
+            var version = GetAttribute<AssemblyInformationalVersionAttribute>(t => t.InformationalVersion);
+
+            this.UpdateDefine(iss.Global, "AppName", appname);
+            this.UpdateDefine(iss.Global, "AppNamePascalCase",  Regex.Replace(ToPascalCase(appname), @"[^0-9a-zA-Z\._]", string.Empty));
             this.UpdateDefine(iss.Global, "AppGeneration", GetAttribute<AssemblyFileVersionAttribute>(t => t.Version).Split('.').First());
             this.UpdateDefine(iss.Global, "AppVersion", GetAttribute<AssemblyFileVersionAttribute>(t => t.Version));
-            this.UpdateDefine(iss.Global,  "AppDescription",GetAttribute<AssemblyDescriptionAttribute>(t => t.Description));
-            this.UpdateDefine(iss.Global,  "AppCompany", GetAttribute<AssemblyCompanyAttribute>(t => t.Company));
-            this.UpdateDefine(iss.Global,  "AppCopyright",GetAttribute<AssemblyCopyrightAttribute>(t => t.Copyright));
-            this.UpdateDefine(iss.Global,  "AppInfoVersion",GetAttribute<AssemblyInformationalVersionAttribute>(t => t.InformationalVersion));
-            this.UpdateDefine(iss.Global,  "AppProduct", GetAttribute<AssemblyProductAttribute>(t => t.Product));
-    
+            this.UpdateDefine(iss.Global, "AppDescription", GetAttribute<AssemblyDescriptionAttribute>(t => t.Description));
+            this.UpdateDefine(iss.Global, "AppCompany", GetAttribute<AssemblyCompanyAttribute>(t => t.Company));
+            this.UpdateDefine(iss.Global, "AppCopyright", GetAttribute<AssemblyCopyrightAttribute>(t => t.Copyright));
+            this.UpdateDefine(iss.Global, "AppInfoVersion", version);
+            this.UpdateDefine(iss.Global, "AppInfoSemVer", version.Substring(0, version.IndexOf('+') - 1));
+            this.UpdateDefine(iss.Global, "AppProduct", GetAttribute<AssemblyProductAttribute>(t => t.Product));
+
             this.parser.WriteFile(this.ScriptName, iss);
 
             this.WithDefine = true;
@@ -78,6 +83,7 @@ namespace PA.InnoSetupProcessor
                 section["VersionInfoProductName"] = "{#AppProduct}";
                 section["VersionInfoDescription"] = "{#AppDescription}";
                 section["VersionInfoTextVersion"] = "{#AppInfoVersion}";
+                section["OutputBaseFilename"] = "Setup_{#AppNamePascalCase}.{#AppInfoSemVer}.exe";
             }
             else
             {
@@ -96,8 +102,8 @@ namespace PA.InnoSetupProcessor
             this.parser.WriteFile(this.ScriptName, iss);
         }
 
-        private string GetAttribute<T>(Func<T,string> getField, string defValue = "") 
-            where T:Attribute
+        private string GetAttribute<T>(Func<T, string> getField, string defValue = "")
+            where T : Attribute
         {
             var attribute = Assembly.GetEntryAssembly().GetCustomAttribute<T>();
             return attribute != null ? getField(attribute) : defValue;
@@ -115,13 +121,38 @@ namespace PA.InnoSetupProcessor
             var sec = iss.Sections["Files"];
 
             sec.RemoveAllKeys();
-            
+
             foreach (var i in InnoSetupFileItem.OptimizeFileItems(list))
             {
                 sec.AddKey(i.ToString(), "");
             }
-                
+
             this.parser.WriteFile(this.ScriptName, iss);
+        }
+
+
+        // Convert the string to Pascal case.
+        internal static string ToPascalCase(string the_string)
+        {
+            // If there are 0 or 1 characters, just return the string.
+            if (the_string == null) return the_string;
+            if (the_string.Length < 2) return the_string.ToUpper();
+
+            // Split the string into words.
+            string[] words = the_string.Split(
+                new char[] { },
+                StringSplitOptions.RemoveEmptyEntries);
+
+            // Combine the words.
+            string result = "";
+            foreach (string word in words)
+            {
+                result +=
+                    word.Substring(0, 1).ToUpper() +
+                    word.Substring(1);
+            }
+
+            return result;
         }
 
     }

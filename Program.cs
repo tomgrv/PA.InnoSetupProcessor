@@ -37,16 +37,35 @@ namespace PA.InnoSetupProcessor
             [Verb(IsDefault = true, Description = "Update File section")]
             void Update([Aliases("cfg"), DefaultValue("Release")] string configuration)
             {
+                if (this.Solution == null)
+                {
+                    try
+                    {
+                        this.Solution = new SolutionProcessor(Directory.EnumerateFiles(Environment.CurrentDirectory, "*.sln").First());
+                    }
+                    catch
+                    {
+                        Console.Error.WriteLine("No Solution specified");
+                        return;
+                    }
+                }
 
                 if (this.Script == null)
                 {
-                    this.Script = new InnoSetupScript(Environment.CurrentDirectory + Path.DirectorySeparatorChar + this.Solution.Solution.SolutionName + ".iss");
+                    try
+                    {
+                        this.Script = new InnoSetupScript(Environment.CurrentDirectory + Path.DirectorySeparatorChar + this.Solution.Solution.SolutionName + ".iss");
+                    }
+                    catch
+                    {
+                        Console.Error.WriteLine("No Script specified");
+                        return;
+                    }
                 }
 
                 this.Script.UpdateDefine();
                 this.Script.UpdateSetup();
                 this.Script.UpdateFileSection(this.Solution.GetFiles(configuration));
-
             }
 
             [Verb(Description = "Create missing setup.config")]

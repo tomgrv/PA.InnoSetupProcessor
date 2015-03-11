@@ -39,7 +39,7 @@ namespace PA.InnoSetupProcessor
             this.UpdateDefine(iss.Global, "AppCompany", GetAttribute<AssemblyCompanyAttribute>(t => t.Company));
             this.UpdateDefine(iss.Global, "AppCopyright", GetAttribute<AssemblyCopyrightAttribute>(t => t.Copyright));
             this.UpdateDefine(iss.Global, "AppInfoVersion", version);
-            this.UpdateDefine(iss.Global, "AppInfoSemVer", version.Substring(0, version.IndexOf('+') - 1));
+            this.UpdateDefine(iss.Global, "AppInfoSemVer", version.Substring(0, version.IndexOf('+')));
             this.UpdateDefine(iss.Global, "AppProduct", GetAttribute<AssemblyProductAttribute>(t => t.Product));
 
             this.parser.WriteFile(this.ScriptName, iss);

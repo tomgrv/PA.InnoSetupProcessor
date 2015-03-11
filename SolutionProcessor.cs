@@ -19,11 +19,7 @@ namespace PA.InnoSetupProcessor
         public SolutionProcessor(string solution)
         {
             var configuration = Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyConfigurationAttribute>();
-
             this.Solution = new Solution(solution);
-
-
-
         }
 
         public void Init()
@@ -40,27 +36,16 @@ namespace PA.InnoSetupProcessor
             }
         }
 
-        internal IEnumerable<InnoSetupFileItem> GetFiles()
-        {
-            var configuration = Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyConfigurationAttribute>();
 
-#if DEBUG
-            return GetFiles(configuration != null ? configuration.Configuration : "Debug");
-#else
-            return GetFiles(configuration != null ? configuration.Configuration : "Release");
-#endif
-
-        }
-
-        internal IEnumerable<InnoSetupFileItem> GetFiles(string configuration)
+        internal IEnumerable<InnoSetupFileItem> GetFiles(string configuration, string platform)
         {
             using (var pc = new ProjectCollection())
             {
                 foreach (ProjectInSolution prj in this.Solution.Projects.Where(p => !p.IsSolutionFolder))
                 {
-                    var pp = new ProjectProcessor(pc.LoadProject(Path.Combine(this.Solution.DirectoryName, prj.RelativePath)), configuration);
+                    var pp = new ProjectProcessor(pc.LoadProject(Path.Combine(this.Solution.DirectoryName, prj.RelativePath)), configuration, platform);
 
-                    foreach (InnoSetupFileItem file in pp.GetFiles())
+                    foreach (InnoSetupFileItem file in pp.GetFiles(configuration, platform))
                     {
                         yield return file;
                     }

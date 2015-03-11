@@ -35,7 +35,7 @@ namespace PA.InnoSetupProcessor
             }
 
             [Verb(IsDefault = true, Description = "Update File section")]
-            void Update([Aliases("cfg"), DefaultValue("Release")] string configuration)
+            void Update([Aliases("cfg"), DefaultValue("Release")] string configuration, [Aliases("pf"), DefaultValue("AnyCPU")] string platform)
             {
                 if (this.Solution == null)
                 {
@@ -65,7 +65,7 @@ namespace PA.InnoSetupProcessor
 
                 this.Script.UpdateDefine();
                 this.Script.UpdateSetup();
-                this.Script.UpdateFileSection(this.Solution.GetFiles(configuration));
+                this.Script.UpdateFileSection(this.Solution.GetFiles(configuration, platform));
             }
 
             [Verb(Description = "Create missing setup.config")]

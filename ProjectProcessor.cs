@@ -25,10 +25,11 @@ namespace PA.InnoSetupProcessor
             this.Project = project;
         }
 
-        public ProjectProcessor(Project project, string config)
+        public ProjectProcessor(Project project, string config, string platform)
             : this(project)
         {
             this.Project.SetProperty("Configuration", config);
+            this.Project.SetProperty("Platform", platform);
             this.Project.ReevaluateIfNecessary();
         }
 
@@ -92,7 +93,7 @@ namespace PA.InnoSetupProcessor
                 .Select(p => new Tuple<ProjectItem, string>(p, p.GetMetadataValue(metadata)));
         }
 
-        internal IEnumerable<InnoSetupFileItem> GetFiles(string parentComponents = null, string parentDir = null, string parentTasks = null)
+        internal IEnumerable<InnoSetupFileItem> GetFiles(string configuration, string platform, string parentComponents = null, string parentDir = null, string parentTasks = null)
         {
             var source = this.GetProjectProperty("TargetPath");
 
@@ -143,9 +144,9 @@ namespace PA.InnoSetupProcessor
                                     GetAttribute(node, "Tasks"));
                             }
 
-                            foreach (var refs in this.GetProjectReferences(this.GetProjectProperty("Configuration")))
+                            foreach (var refs in this.GetProjectReferences(configuration, platform))
                             {
-                                foreach (var files in refs.GetFiles(parentComponents, parentDir))
+                                foreach (var files in refs.GetFiles(configuration, platform, parentComponents, parentDir))
                                 {
                                     yield return files;
                                 }
@@ -208,13 +209,13 @@ namespace PA.InnoSetupProcessor
             }
         }
 
-        internal IEnumerable<ProjectProcessor> GetProjectReferences(string configuration)
+        internal IEnumerable<ProjectProcessor> GetProjectReferences(string configuration, string platform)
         {
             using (var pc = new ProjectCollection())
             {
                 foreach (ProjectItem ppi in this.Project.GetItems("ProjectReference"))
                 {
-                    yield return new ProjectProcessor(pc.LoadProject(Path.GetFullPath(Path.Combine(this.Project.DirectoryPath, ppi.EvaluatedInclude))), configuration);
+                    yield return new ProjectProcessor(pc.LoadProject(Path.GetFullPath(Path.Combine(this.Project.DirectoryPath, ppi.EvaluatedInclude))), configuration, platform);
                 }
             }
         }

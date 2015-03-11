@@ -122,6 +122,10 @@
     </MonoDevelop>
   </ProjectExtensions>
   <ItemGroup>
+    <ProjectReference Include="..\PA.Converters\PA.Converters.csproj">
+      <Project>{b09f91a1-df25-4dae-8e45-40df0fa9334f}</Project>
+      <Name>PA.Converters</Name>
+    </ProjectReference>
     <ProjectReference Include="..\PA.File\PA.File.csproj">
       <Project>{69C9EA62-E168-4241-89DB-A44E8387E846}</Project>
       <Name>PA.File</Name>

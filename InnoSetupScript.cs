@@ -6,6 +6,7 @@ using IniParser.Parser;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Linq;
+using PA.Converters.Extensions;
 
 namespace PA.InnoSetupProcessor
 {
@@ -31,7 +32,7 @@ namespace PA.InnoSetupProcessor
             var version = GetAttribute<AssemblyInformationalVersionAttribute>(t => t.InformationalVersion);
 
             this.UpdateDefine(iss.Global, "AppName", appname);
-            this.UpdateDefine(iss.Global, "AppNamePascalCase",  Regex.Replace(ToPascalCase(appname), @"[^0-9a-zA-Z\._]", string.Empty));
+            this.UpdateDefine(iss.Global, "AppNamePascalCase", Regex.Replace(appname.ToPascalCase(), @"[^0-9a-zA-Z\._]", string.Empty));
             this.UpdateDefine(iss.Global, "AppGeneration", GetAttribute<AssemblyFileVersionAttribute>(t => t.Version).Split('.').First());
             this.UpdateDefine(iss.Global, "AppVersion", GetAttribute<AssemblyFileVersionAttribute>(t => t.Version));
             this.UpdateDefine(iss.Global, "AppDescription", GetAttribute<AssemblyDescriptionAttribute>(t => t.Description));
@@ -83,7 +84,7 @@ namespace PA.InnoSetupProcessor
                 section["VersionInfoProductName"] = "{#AppProduct}";
                 section["VersionInfoDescription"] = "{#AppDescription}";
                 section["VersionInfoTextVersion"] = "{#AppInfoVersion}";
-                section["OutputBaseFilename"] = "Setup_{#AppNamePascalCase}.{#AppInfoSemVer}.exe";
+                section["OutputBaseFilename"] = "Setup_{#AppNamePascalCase}.{#AppInfoSemVer}";
             }
             else
             {
@@ -97,6 +98,7 @@ namespace PA.InnoSetupProcessor
                 section["VersionInfoProductName"] = GetAttribute<AssemblyTitleAttribute>(t => t.Title);
                 section["VersionInfoDescription"] = GetAttribute<AssemblyDescriptionAttribute>(t => t.Description);
                 section["VersionInfoTextVersion"] = GetAttribute<AssemblyInformationalVersionAttribute>(t => t.InformationalVersion);
+                section["OutputBaseFilename"] = "Setup_" +GetAttribute<AssemblyTitleAttribute>(t => t.Title).ToPascalCase() + "." + GetAttribute<AssemblyFileVersionAttribute>(t => t.Version);
             }
 
             this.parser.WriteFile(this.ScriptName, iss);
@@ -128,31 +130,6 @@ namespace PA.InnoSetupProcessor
             }
 
             this.parser.WriteFile(this.ScriptName, iss);
-        }
-
-
-        // Convert the string to Pascal case.
-        internal static string ToPascalCase(string the_string)
-        {
-            // If there are 0 or 1 characters, just return the string.
-            if (the_string == null) return the_string;
-            if (the_string.Length < 2) return the_string.ToUpper();
-
-            // Split the string into words.
-            string[] words = the_string.Split(
-                new char[] { },
-                StringSplitOptions.RemoveEmptyEntries);
-
-            // Combine the words.
-            string result = "";
-            foreach (string word in words)
-            {
-                result +=
-                    word.Substring(0, 1).ToUpper() +
-                    word.Substring(1);
-            }
-
-            return result;
         }
 
     }

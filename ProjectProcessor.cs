@@ -158,8 +158,12 @@ namespace PA.InnoSetupProcessor
 
                             foreach (var files in this.GetProjectItems("CopyToOutputDirectory", "None").Where(p => p.Item2 != "Never"))
                             {
+                                var destdir = GetAttribute(node, "Flatten", "false").ToLower() == "true"
+                                    ? GetAttribute(node, "DestDir")
+                                    : Path.Combine(GetAttribute(node, "DestDir"), Path.GetDirectoryName(files.Item1.EvaluatedInclude));
+
                                 yield return new InnoSetupFileItem(Path.GetFullPath(Path.Combine(this.Project.DirectoryPath, files.Item1.EvaluatedInclude)),
-                                   GetAttribute(node, "DestDir"),
+                                   destdir,
                                    components,
                                    GetAttribute(node, "Tasks"));
                             }
@@ -235,10 +239,6 @@ namespace PA.InnoSetupProcessor
                 return defValue;
             }
         }
-
-
-
-
     }
 }
 

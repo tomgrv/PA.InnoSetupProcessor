@@ -6,8 +6,12 @@
     <title>$title$</title>
     <authors>$author$</authors>
     <owners>$author$</owners>
+    <projectUrl>http://perspicapps.github.io/toolbox</projectUrl>
+    <licenceUrl>https://raw.githubusercontent.com/perspicapps/toolbox/master/LICENCE</licenceUrl>
+    <iconUrl>https://raw.githubusercontent.com/perspicapps/perspicapps.github.io/master/icons/logo-100.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
+    <developmentDependency>true</developmentDependency>
     <copyright>© PA 2014</copyright>
   </metadata>
 </package>

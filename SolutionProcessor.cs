@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Reflection;
+using System.Diagnostics;
 
 namespace PA.InnoSetupProcessor
 {
@@ -25,6 +26,8 @@ namespace PA.InnoSetupProcessor
         public void Init()
         {
             var solution = new Solution(this.Solution.DirectoryName + Path.DirectorySeparatorChar + this.Solution.SolutionName);
+
+            Trace.TraceInformation("Processing solution <"+solution.SolutionName+">");
 
             using (var pc = new ProjectCollection())
             {
@@ -44,6 +47,8 @@ namespace PA.InnoSetupProcessor
                 foreach (ProjectInSolution prj in this.Solution.Projects.Where(p => !p.IsSolutionFolder))
                 {
                     var pp = new ProjectProcessor(pc.LoadProject(Path.Combine(this.Solution.DirectoryName, prj.RelativePath)), configuration, platform);
+
+                    Trace.TraceInformation("Processing project <"+pp.Project.FullPath+">");
 
                     foreach (InnoSetupFileItem file in pp.GetFiles(configuration, platform))
                     {

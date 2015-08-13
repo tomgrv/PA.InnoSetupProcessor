@@ -9,6 +9,7 @@ using System.Xml;
 using System.Text;
 using CLAP;
 using CLAP.Validation;
+using System.Diagnostics;
 
 
 namespace PA.InnoSetupProcessor
@@ -45,7 +46,7 @@ namespace PA.InnoSetupProcessor
                     }
                     catch
                     {
-                        Console.Error.WriteLine("No Solution specified");
+                        Trace.TraceError("No Solution specified");
                         return;
                     }
                 }
@@ -58,7 +59,7 @@ namespace PA.InnoSetupProcessor
                     }
                     catch
                     {
-                        Console.Error.WriteLine("No Script specified");
+                        Trace.TraceError("No Script specified");
                         return;
                     }
                 }

@@ -5,6 +5,7 @@ using Microsoft.Build.Evaluation;
 using System.Xml;
 using System.Linq;
 using System.Reflection;
+using System.Diagnostics;
 
 namespace PA.InnoSetupProcessor
 {
@@ -44,6 +45,8 @@ namespace PA.InnoSetupProcessor
         public void Init()
         {
             ProjectItem pi = this.Project.Items.FirstOrDefault(i => i.ItemType == "None" && i.EvaluatedInclude == Setup);
+
+            Trace.TraceInformation("Processing solution <"+pi+">");
 
             if (pi == null)
             {

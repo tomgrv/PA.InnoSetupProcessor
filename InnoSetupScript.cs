@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Linq;
 using PA.Converters.Extensions;
+using System.Diagnostics;
 
 namespace PA.InnoSetupProcessor
 {
@@ -20,7 +21,7 @@ namespace PA.InnoSetupProcessor
 
         public InnoSetupScript(string filename)
         {
-            Console.Out.WriteLine("Using <" + filename + ">");
+            Trace.TraceInformation("Using <" + filename + ">");
             this.ScriptName = filename;
         }
 
